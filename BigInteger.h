@@ -2,8 +2,9 @@
 
 #ifndef BIGINTEGER_H
 #define BIGINTEGER_H
-#define MAX_SIZE 10000
+#define MAX_SIZE 100000
 #include <string>
+#include <random>
 #include <iostream>
 #include <sstream>
 #include <cmath>
@@ -17,6 +18,7 @@ public:
 	BigInteger(std::string s); // "string" constructor
 	BigInteger(std::string s, bool sin); // "string" constructor
 	BigInteger(int n); // "int" constructor
+	BigInteger(int bit, std::random_device& rd);
 	void setNumber(std::string s);
 	const std::string& getNumber(); // retrieves the number
 	void setSign(bool s);
@@ -81,6 +83,31 @@ BigInteger::BigInteger(std::string s) {// "string" constructor
 		setNumber(s.substr(1));
 		sign = (s[0] == '-');
 	}
+}
+//random big integer constructor
+BigInteger::BigInteger(int bit, std::random_device& rd) {
+
+	if (bit >= 2) {
+		std::string temp = "2";
+		std::uniform_int_distribution<int> dist(48, 57);
+		for (int i = 1; i < bit; i++) {
+			temp = multiply(temp, "2");
+		}
+		for (int i = 0; i < temp.size(); i++) {
+			int num = dist(rd);
+			temp[i] = char(num);
+		}
+		while (temp[0] == '0' && temp.size() > 1) {
+			temp.erase(0, 1);
+		}
+		this->number = temp;
+		this->sign = false;
+	}
+	else {
+		this->number = "0";
+		this->sign = false;
+	}
+	
 }
 
 BigInteger::BigInteger(std::string s, bool sin) {// "string" constructor
@@ -420,7 +447,7 @@ std::string BigInteger::multiply(std::string n1, std::string n2) {
 		if (carry > 0) {
 			temp.insert(0, 1, (carry + '0'));
 		}
-		temp.append((n1.length() - i - 1), '0'); // as like mult by 10, 100, 1000, 10000 and so on
+		temp.append((n1.length() - i - 1), '0'); // as like multiply by 10, 100, 1000, 10000 and so on
 
 		res = add(res, temp); // O(n)
 	}
@@ -438,9 +465,9 @@ std::pair<std::string, long long> BigInteger::divide(std::string n, long long de
 	long long rem = 0;
 	std::string result; result.resize(MAX_SIZE);
 
-	for (int indx = 0, len = n.length(); indx < len; ++indx) {
-		rem = (rem * 10) + (n[indx] - '0');
-		result[indx] = rem / den + '0';
+	for (int index = 0, len = n.length(); index < len; ++index) {
+		rem = (rem * 10) + (n[index] - '0');
+		result[index] = rem / den + '0';
 		rem %= den;
 	}
 
@@ -488,3 +515,5 @@ void BigInteger::pow(long long n) {
 }
 
 #endif // !BIGINTERGER_H
+
+	
