@@ -2,7 +2,7 @@
 
 #ifndef BIGINTEGER_H
 #define BIGINTEGER_H
-#define MAX_SIZE 100000
+#define MAX_SIZE 10000
 #include <string>
 #include <random>
 #include <iostream>
@@ -13,6 +13,7 @@ class BigInteger {
 private:
 	std::string number;
 	bool sign;
+
 public:
 	BigInteger(); // empty constructor initializes zero
 	BigInteger(std::string s); // "string" constructor
@@ -31,20 +32,24 @@ public:
 	bool operator < (BigInteger b);
 	bool operator >= (BigInteger b);
 	bool operator <= (BigInteger b);
+	bool is_Prime();
 	BigInteger& operator ++(); // prefix
 	BigInteger  operator ++(int); // postfix
 	BigInteger& operator --(); // prefix
 	BigInteger  operator --(int); // postfix
-	BigInteger operator + (BigInteger b);
-	BigInteger operator - (BigInteger b);
-	BigInteger operator * (BigInteger b);
-	BigInteger operator / (BigInteger b);
-	BigInteger operator % (BigInteger b);
-	BigInteger& operator += (BigInteger b);
-	BigInteger& operator -= (BigInteger b);
-	BigInteger& operator *= (BigInteger b);
-	BigInteger& operator /= (BigInteger b);
-	BigInteger& operator %= (BigInteger b);
+	inline BigInteger operator + (BigInteger b);
+	inline BigInteger operator - (BigInteger b);
+	inline BigInteger operator * (BigInteger b);
+	inline BigInteger operator / (BigInteger b);
+	inline BigInteger operator % (BigInteger b);
+	inline BigInteger& operator += (BigInteger b);
+	inline BigInteger& operator -= (BigInteger b);
+	inline BigInteger& operator *= (BigInteger b);
+	inline BigInteger& operator /= (BigInteger b);
+	inline BigInteger& operator %= (BigInteger b);
+	inline BigInteger operator << (uint64_t b);
+	inline BigInteger operator >> (uint64_t b);
+
 	std::ostream& output(std::ostream& out = std::cout) {
 		out << number;
 		return out;
@@ -52,7 +57,13 @@ public:
 	friend std::ostream& operator << (std::ostream& out, BigInteger& x) {
 		return x.output(out);
 	}
+
 	void pow(long long n);
+	void XOR(long long n);
+	void OR(long long n);
+	void NOT();
+	void AND(long long n);
+
 private:
 	bool equals(BigInteger n1, BigInteger n2);
 	bool less(BigInteger n1, BigInteger n2);
@@ -188,7 +199,7 @@ bool BigInteger::operator <= (BigInteger b) {
 }
 
 // increments the value, then returns its value
-BigInteger& BigInteger::operator ++() {  // prefix
+inline BigInteger& BigInteger::operator ++() {  // prefix
 	(*this) = (*this) + 1;
 	return (*this);
 }
@@ -218,7 +229,7 @@ BigInteger BigInteger::operator --(int) { // postfix
 	return before;
 }
 
-BigInteger BigInteger::operator + (BigInteger b) {
+inline BigInteger BigInteger::operator + (BigInteger b) {
 	BigInteger addition;
 	// both +ve or -ve
 	if (getSign() == b.getSign()) {
@@ -243,12 +254,12 @@ BigInteger BigInteger::operator + (BigInteger b) {
 	return addition;
 }
 
-BigInteger BigInteger::operator - (BigInteger b) {
+inline BigInteger BigInteger::operator - (BigInteger b) {
 	b.setSign(!b.getSign()); // x - y = x + (-y)
 	return (*this) + b;
 }
 
-BigInteger BigInteger::operator * (BigInteger b) {
+inline BigInteger BigInteger::operator * (BigInteger b) {
 
 	BigInteger mul;
 
@@ -263,7 +274,7 @@ BigInteger BigInteger::operator * (BigInteger b) {
 }
 // Warning: Denominator must be within "long long" size not "BigInteger"
 
-BigInteger BigInteger::operator / (BigInteger b) {
+inline BigInteger BigInteger::operator / (BigInteger b) {
 	long long den = toInt(b.getNumber());
 	BigInteger div;
 
@@ -277,7 +288,7 @@ BigInteger BigInteger::operator / (BigInteger b) {
 	return div;
 }
 // Warning: Denominator must be within "long long" size not "BigInteger"
-BigInteger BigInteger::operator % (BigInteger b) {
+inline BigInteger BigInteger::operator % (BigInteger b) {
 	long long den = toInt(b.getNumber());
 	BigInteger rem;
 	long long rem_int = divide(number, den).second;
@@ -290,29 +301,51 @@ BigInteger BigInteger::operator % (BigInteger b) {
 	return rem;
 }
 
-BigInteger& BigInteger::operator += (BigInteger b) {
+
+
+inline BigInteger& BigInteger::operator += (BigInteger b) {
 	(*this) = (*this) + b;
 	return (*this);
 }
 
-BigInteger& BigInteger::operator -= (BigInteger b) {
+inline BigInteger& BigInteger::operator -= (BigInteger b) {
 	(*this) = (*this) - b;
 	return (*this);
 }
 
-BigInteger& BigInteger::operator *= (BigInteger b) {
+inline BigInteger& BigInteger::operator *= (BigInteger b) {
 	(*this) = (*this) * b;
 	return (*this);
 }
 
-BigInteger& BigInteger::operator /= (BigInteger b) {
+inline BigInteger& BigInteger::operator /= (BigInteger b) {
 	(*this) = (*this) / b;
 	return (*this);
 }
 
-BigInteger& BigInteger::operator %= (BigInteger b) {
+inline BigInteger& BigInteger::operator %= (BigInteger b) {
 	(*this) = (*this) % b;
 	return (*this);
+}
+
+inline BigInteger BigInteger::operator<<(uint64_t b) {
+	BigInteger result(this->number);
+	std::string temp = "2";
+	for (int i = 1; i < b; i++) {
+		temp = multiply(temp, "2");
+	}
+
+	return result * temp;
+}
+
+inline BigInteger BigInteger::operator>>(uint64_t b) {
+	BigInteger result(this->number);
+	std::string temp = "2";
+	for (int i = 1; i < b; i++) {
+		temp = multiply(temp, "2");
+	}
+
+	return result / temp;
 }
 
 bool BigInteger::equals(BigInteger n1, BigInteger n2) {
@@ -514,6 +547,193 @@ void BigInteger::pow(long long n) {
 	}
 }
 
-#endif // !BIGINTERGER_H
+void BigInteger::XOR(long long n) {
 
-	
+	std::pair<std::string, long long> term;
+	std::string temp1;
+	std::string temp2;
+	std::string result = "0";
+
+	while (this->number != "0") {
+		term = divide(this->number, 2);
+		this->number = term.first;
+		temp1 += std::to_string(term.second);
+	}
+	while (n != 0) {
+		temp2 += std::to_string(n % 2);
+		n = n / 2;
+	}
+
+	//add '0' to the end of the string
+	while (temp1.size() > temp2.size()) {
+		temp2 += "0";
+	}
+	while (temp2.size() > temp1.size()) {
+		temp1 += "0";
+	}
+	//XOR
+	//	  0 ^ 0 -> 0
+	//    1 ^ 0 -> 1
+	//    0 ^ 1 -> 1
+	//    1 ^ 1 -> 0
+	for (int i = 0; i < temp1.size(); i++) {
+		if (temp1[i] == '0' && temp2[i] == '0') {
+			temp2[i] = '0';
+		}
+		else if (temp1[i] == '0' && temp2[i] == '1') {
+			temp2[i] = '1';
+		}
+		else if (temp1[i] == '1' && temp2[i] == '0') {
+			temp2[i] = '1';
+		}
+		else {
+			temp2[i] = '0';
+		}
+	}
+	//convert to decimal
+	for (int i = temp2.size() - 1; i >= 0; i--) {
+		if (temp2[i] == '1') {
+			result = add(result, std::to_string(long long(std::pow(2, i))));
+		}
+	}
+	this->number = result;
+}
+
+void BigInteger::OR(long long n) {
+
+	std::pair<std::string, long long> term ;
+	std::string temp1;
+	std::string temp2;
+	std::string result = "0";
+
+	while (this->number != "0") {
+		term = divide(this->number, 2);
+		this->number = term.first;
+		temp1 += std::to_string(term.second);
+	}
+	while (n != 0) {
+		temp2 += std::to_string(n % 2);
+		n = n / 2;
+	}
+
+	//add '0' to the end of the string
+	while (temp1.size() > temp2.size()) {
+		temp2 += "0";
+	}
+	while (temp2.size() > temp1.size()) {
+		temp1 += "0";
+	}
+	//OR
+	//	  0 | 0 -> 0
+	//    1 | 0 -> 1
+	//    0 | 1 -> 1
+	//    1 | 1 -> 1
+	for (int i = 0; i < temp1.size(); i++) {
+		if (temp1[i] == '0' && temp2[i] == '0') {
+			temp2[i] = '0';
+		}
+		else if (temp1[i] == '0' && temp2[i] == '1') {
+			temp2[i] = '1';
+		}
+		else if (temp1[i] == '1' && temp2[i] == '0') {
+			temp2[i] = '1';
+		}
+		else if(temp1[i] == '1' && temp2[i] == '1') {
+			temp2[i] = '1';
+		}
+	}
+	//convert to decimal
+	for (int i = temp2.size() - 1; i >= 0; i--) {
+		if (temp2[i] == '1') {
+			result = add(result, std::to_string(long long(std::pow(2, i))));
+		}
+	}
+	this->number = result;
+}
+
+void BigInteger::NOT() {
+	std::pair<std::string, long long> term;
+	std::string temp1 = "0000000000000000000000000000000";
+	std::string temp2;
+	std::string result = "0";
+
+	while (this->number != "0") {
+		term = divide(this->number, 2);
+		this->number = term.first;
+		temp2 += std::to_string(term.second);
+	}
+
+	std::reverse(temp2.begin(), temp2.end());
+	temp1 = temp1.substr(0, temp1.size() - temp2.size() + 1) + temp2;
+
+	//NOT
+	for (int i = 0; i < temp1.size(); i++) {
+		if (temp1[i] == '0') {
+			temp1[i] = '1';
+		}
+		else if (temp1[i] == '1') {
+			temp1[i] = '0';
+		}
+	}
+	//convert to decimal
+	for (int i = temp1.size() - 1; i >= 0; i--) {
+		if (temp1[i] == '1') {
+			result = add(result, std::to_string(long long(std::pow(2, temp1.size() - i - 1))));
+		}
+	}
+	this->number = result;
+}
+
+void BigInteger::AND(long long n) {
+	std::pair<std::string, long long> term;
+	std::string temp1;
+	std::string temp2;
+	std::string result = "0";
+
+	while (this->number != "0") {
+		term = divide(this->number, 2);
+		this->number = term.first;
+		temp1 += std::to_string(term.second);
+	}
+	while (n != 0) {
+		temp2 += std::to_string(n % 2);
+		n = n / 2;
+	}
+
+
+	//add '0' to the end of the string
+	while (temp1.size() > temp2.size()) {
+		temp2 += "0";
+	}
+	while (temp2.size() > temp1.size()) {
+		temp1 += "0";
+	}
+	//AND
+	//	  0 & 0 -> 0
+	//    1 & 0 -> 0
+	//    0 & 1 -> 0
+	//    1 & 1 -> 1
+	for (int i = 0; i < temp1.size(); i++) {
+		if (temp1[i] == '0' && temp2[i] == '0') {
+			temp2[i] = '0';
+		}
+		else if (temp1[i] == '0' && temp2[i] == '1') {
+			temp2[i] = '0';
+		}
+		else if (temp1[i] == '1' && temp2[i] == '0') {
+			temp2[i] = '0';
+		}
+		else {
+			temp2[i] = '1';
+		}
+	}
+	//convert to decimal
+	for (int i = temp2.size() - 1; i >= 0; i--) {
+		if (temp2[i] == '1') {
+			result = add(result, std::to_string(long long(std::pow(2, i))));
+		}
+	}
+	this->number = result;
+}
+
+#endif // !BIGINTERGER_H
